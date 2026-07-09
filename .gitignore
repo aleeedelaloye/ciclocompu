@@ -1,0 +1,27 @@
+.gradle/
+build/
+**/build/
+*.class
+*.dex
+*.tmp
+*.log
+local.properties
+.DS_Store
+Thumbs.db
+
+# Android/IDE generated state
+.idea/
+*.iml
+
+# Arduino generated artifacts
+*.bin
+*.elf
+*.map
+
+# Vendor reference package, kept locally only
+work/waveshare-147-demo/
+work/waveshare-147-demo.zip
+
+# Keep only the latest shared APK artifact
+outputs/*.apk
+!outputs/CicloPanel-keep-screen-esp32-debug.apk
