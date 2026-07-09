@@ -6,7 +6,7 @@ App Android + firmware ESP32 para un ciclocomputador con pantalla Waveshare ESP3
 
 - `work/running-companion/`: APK Android nativo.
 - `work/esp32-panelrun32/PanelRun32/`: firmware Arduino para el ESP32-S3.
-- `outputs/CicloPanel-historial-maxima-debug.apk`: APK debug actual.
+- `outputs/CicloPanel-keep-screen-esp32-debug.apk`: APK debug actual.
 - `scripts/build-apk.ps1`: compila el APK y copia el resultado a `outputs`.
 - `scripts/upload-esp32.ps1`: compila y carga el firmware al ESP32.
 
@@ -18,8 +18,7 @@ Funciones principales:
 - conexion BLE automatica con `PanelRun32`;
 - envio de velocidad, distancia, tiempo y promedio al ESP32;
 - servicio en primer plano para seguir enviando datos con la app abierta y pantalla encendida;
-- historial cronologico de salidas mayores a 5 minutos;
-- velocidad maxima en vivo y en historial;
+- historial de salidas mayores a 5 minutos;
 - mapa OSM e instantanea para compartir.
 
 Compilar:
@@ -56,4 +55,3 @@ Si cambia el puerto, revisar con:
 ```powershell
 & 'C:\Program Files\Arduino CLI\arduino-cli.exe' board list
 ```
-

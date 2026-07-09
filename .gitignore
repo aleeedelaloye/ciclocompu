@@ -24,4 +24,4 @@ work/waveshare-147-demo.zip
 
 # Keep only the latest shared APK artifact
 outputs/*.apk
-!outputs/CicloPanel-historial-maxima-debug.apk
+!outputs/CicloPanel-keep-screen-esp32-debug.apk

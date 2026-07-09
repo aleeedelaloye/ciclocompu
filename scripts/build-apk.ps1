@@ -1,5 +1,5 @@
 param(
-  [string]$OutputName = "CicloPanel-historial-maxima-debug.apk"
+  [string]$OutputName = "CicloPanel-keep-screen-esp32-debug.apk"
 )
 
 $ErrorActionPreference = "Stop"
@@ -43,4 +43,3 @@ try {
 New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null
 Copy-Item -Path $ApkSource -Destination $ApkDest -Force
 Write-Host "APK listo: $ApkDest"
-

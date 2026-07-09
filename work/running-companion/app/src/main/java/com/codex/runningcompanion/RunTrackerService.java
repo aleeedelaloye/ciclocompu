@@ -34,7 +34,6 @@ public class RunTrackerService extends Service implements LocationListener {
     private long elapsedSeconds;
     private float distanceMeters;
     private float currentSpeedMps;
-    private float maxSpeedMps;
     private float accuracyMeters;
     private boolean running;
 
@@ -110,7 +109,6 @@ public class RunTrackerService extends Service implements LocationListener {
         elapsedSeconds = 0L;
         distanceMeters = 0f;
         currentSpeedMps = 0f;
-        maxSpeedMps = 0f;
         accuracyMeters = 0f;
         lastLocation = null;
         route.clear();
@@ -155,7 +153,6 @@ public class RunTrackerService extends Service implements LocationListener {
             }
         }
         currentSpeedMps = location.hasSpeed() ? location.getSpeed() : estimateSpeed(location);
-        if (currentSpeedMps > maxSpeedMps) maxSpeedMps = currentSpeedMps;
         lastLocation = location;
         broadcastStats();
     }
@@ -176,7 +173,6 @@ public class RunTrackerService extends Service implements LocationListener {
         intent.putExtra(RunStats.EXTRA_SECONDS, seconds);
         intent.putExtra(RunStats.EXTRA_DISTANCE, distanceMeters);
         intent.putExtra(RunStats.EXTRA_SPEED, currentSpeedMps);
-        intent.putExtra(RunStats.EXTRA_MAX_SPEED, maxSpeedMps);
         intent.putExtra(RunStats.EXTRA_ACCURACY, accuracyMeters);
         intent.putExtra(RunStats.EXTRA_LATITUDES, latitudes());
         intent.putExtra(RunStats.EXTRA_LONGITUDES, longitudes());

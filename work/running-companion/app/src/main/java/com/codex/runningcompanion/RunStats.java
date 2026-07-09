@@ -10,7 +10,6 @@ final class RunStats {
     static final String EXTRA_SECONDS = "seconds";
     static final String EXTRA_DISTANCE = "distance";
     static final String EXTRA_SPEED = "speed";
-    static final String EXTRA_MAX_SPEED = "max_speed";
     static final String EXTRA_ACCURACY = "accuracy";
     static final String EXTRA_LATITUDES = "latitudes";
     static final String EXTRA_LONGITUDES = "longitudes";
