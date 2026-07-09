@@ -78,6 +78,7 @@ public class MainActivity extends Activity {
     private TextView speedValue;
     private SpeedGaugeView speedGaugeView;
     private TextView averageValue;
+    private TextView maxSpeedValue;
     private TextView distanceValue;
     private TextView timeValue;
     private TextView accuracyValue;
@@ -102,6 +103,7 @@ public class MainActivity extends Activity {
     private long latestSeconds;
     private float latestDistanceMeters;
     private float latestSpeedMps;
+    private float latestMaxSpeedMps;
     private float latestAccuracyMeters;
     private double[] latestLatitudes = new double[0];
     private double[] latestLongitudes = new double[0];
@@ -117,16 +119,17 @@ public class MainActivity extends Activity {
             long seconds = intent.getLongExtra(RunStats.EXTRA_SECONDS, 0L);
             float distance = intent.getFloatExtra(RunStats.EXTRA_DISTANCE, 0f);
             float speed = intent.getFloatExtra(RunStats.EXTRA_SPEED, 0f);
+            float maxSpeed = intent.getFloatExtra(RunStats.EXTRA_MAX_SPEED, 0f);
             float accuracy = intent.getFloatExtra(RunStats.EXTRA_ACCURACY, 0f);
             if (hasReceivedStats && wasRunning && !nowRunning && seconds >= MIN_HISTORY_SECONDS) {
-                saveRunHistory(seconds, distance);
+                saveRunHistory(seconds, distance, maxSpeed, accuracy);
             }
             running = nowRunning;
             hasReceivedStats = true;
             latestLatitudes = intent.getDoubleArrayExtra(RunStats.EXTRA_LATITUDES);
             latestLongitudes = intent.getDoubleArrayExtra(RunStats.EXTRA_LONGITUDES);
             updateOsmRoute();
-            updateStats(seconds, distance, speed, accuracy);
+            updateStats(seconds, distance, speed, maxSpeed, accuracy);
         }
     };
     private final BroadcastReceiver esp32StatusReceiver = new BroadcastReceiver() {
@@ -145,7 +148,7 @@ public class MainActivity extends Activity {
         Configuration.getInstance().setUserAgentValue(getPackageName());
         audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
         setContentView(buildLayout());
-        updateStats(0, 0f, 0f, 0f);
+        updateStats(0, 0f, 0f, 0f, 0f);
     }
 
     @Override
@@ -217,7 +220,7 @@ public class MainActivity extends Activity {
         LinearLayout grid = new LinearLayout(this);
         grid.setOrientation(LinearLayout.VERTICAL);
         grid.setPadding(0, 0, 0, dp(8));
-        root.addView(grid, new LinearLayout.LayoutParams(-1, dp(168)));
+        root.addView(grid, new LinearLayout.LayoutParams(-1, dp(246)));
 
         LinearLayout row1 = row();
         averageValue = addMetric(row1, "Promedio", "0.0 km/h");
@@ -225,9 +228,13 @@ public class MainActivity extends Activity {
         grid.addView(row1, new LinearLayout.LayoutParams(-1, dp(78)));
 
         LinearLayout row2 = row();
+        maxSpeedValue = addMetric(row2, "Maxima", "0.0 km/h");
         timeValue = addMetric(row2, "Tiempo", "00:00:00");
-        accuracyValue = addMetric(row2, "GPS", "esperando");
         grid.addView(row2, new LinearLayout.LayoutParams(-1, dp(78)));
+
+        LinearLayout row3 = row();
+        accuracyValue = addMetric(row3, "GPS", "esperando");
+        grid.addView(row3, new LinearLayout.LayoutParams(-1, dp(78)));
 
         primaryButton = new Button(this);
         primaryButton.setText("INICIAR");
@@ -549,17 +556,29 @@ public class MainActivity extends Activity {
         return params;
     }
 
-    private void saveRunHistory(long seconds, float distanceMeters) {
+    private void saveRunHistory(long seconds, float distanceMeters, float maxSpeedMps, float accuracyMeters) {
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-        String date = new SimpleDateFormat("dd/MM HH:mm", Locale.getDefault()).format(new Date());
-        String entry = date + "|" + seconds + "|" + distanceMeters;
+        long timestamp = System.currentTimeMillis();
+        String date = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(new Date(timestamp));
+        float averageKmh = seconds > 0 ? (distanceMeters / 1000f) / (seconds / 3600f) : 0f;
+        String entry = String.format(
+                Locale.US,
+                "%d|%s|%d|%.2f|%.2f|%.2f|%.1f",
+                timestamp,
+                date,
+                seconds,
+                distanceMeters,
+                maxSpeedMps * 3.6f,
+                averageKmh,
+                accuracyMeters
+        );
         String current = prefs.getString(PREF_HISTORY, "");
         String[] oldItems = current.isEmpty() ? new String[0] : current.split("\\n");
         StringBuilder builder = new StringBuilder(entry);
         int kept = 1;
         for (String item : oldItems) {
             if (item.trim().isEmpty()) continue;
-            if (kept >= 8) break;
+            if (kept >= 20) break;
             builder.append('\n').append(item);
             kept++;
         }
@@ -581,19 +600,73 @@ public class MainActivity extends Activity {
         for (String item : items) {
             String[] parts = item.split("\\|");
             if (parts.length < 3) continue;
-            long seconds = Long.parseLong(parts[1]);
-            float meters = Float.parseFloat(parts[2]);
-            TextView row = text(
-                    parts[0] + "  |  " + String.format(Locale.US, "%.2f km", meters / 1000f)
-                            + "\n" + formatTime(seconds) + "  |  " + formatAverageSpeed(seconds, meters),
-                    13,
-                    COLOR_TEXT,
-                    Typeface.BOLD
-            );
-            row.setLineSpacing(dp(2), 1.05f);
-            row.setPadding(0, dp(6), 0, dp(6));
-            historyList.addView(row);
+            String date;
+            long seconds;
+            float meters;
+            float maxKmh;
+            float avgKmh;
+            float accuracy;
+            try {
+                if (parts.length >= 7) {
+                    date = parts[1];
+                    seconds = Long.parseLong(parts[2]);
+                    meters = Float.parseFloat(parts[3]);
+                    maxKmh = Float.parseFloat(parts[4]);
+                    avgKmh = Float.parseFloat(parts[5]);
+                    accuracy = Float.parseFloat(parts[6]);
+                } else {
+                    date = parts[0];
+                    seconds = Long.parseLong(parts[1]);
+                    meters = Float.parseFloat(parts[2]);
+                    maxKmh = 0f;
+                    avgKmh = seconds > 0 ? (meters / 1000f) / (seconds / 3600f) : 0f;
+                    accuracy = 0f;
+                }
+            } catch (NumberFormatException ex) {
+                continue;
+            }
+            historyList.addView(historyCard(date, seconds, meters, maxKmh, avgKmh, accuracy));
         }
+    }
+
+    private View historyCard(String date, long seconds, float meters, float maxKmh, float avgKmh, float accuracy) {
+        LinearLayout card = new LinearLayout(this);
+        card.setOrientation(LinearLayout.VERTICAL);
+        card.setPadding(dp(12), dp(11), dp(12), dp(11));
+        card.setBackground(stroked(COLOR_PANEL_SOFT, COLOR_BORDER, 16, 1));
+        LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(-1, -2);
+        cardParams.setMargins(0, 0, 0, dp(8));
+        card.setLayoutParams(cardParams);
+
+        TextView title = text(date, 13, COLOR_TEXT, Typeface.BOLD);
+        title.setPadding(0, 0, 0, dp(7));
+        card.addView(title);
+
+        LinearLayout rowTop = row();
+        rowTop.addView(historyMetric("Distancia", String.format(Locale.US, "%.2f km", meters / 1000f)), metricParams());
+        rowTop.addView(historyMetric("Tiempo", formatTime(seconds)), metricParams());
+        card.addView(rowTop, new LinearLayout.LayoutParams(-1, dp(58)));
+
+        LinearLayout rowBottom = row();
+        rowBottom.addView(historyMetric("Promedio", String.format(Locale.US, "%.1f km/h", avgKmh)), metricParams());
+        rowBottom.addView(historyMetric("Maxima", maxKmh > 0 ? String.format(Locale.US, "%.1f km/h", maxKmh) : "--"), metricParams());
+        rowBottom.addView(historyMetric("GPS", accuracy > 0 ? String.format(Locale.US, "+/- %.0f m", accuracy) : "--"), metricParams());
+        card.addView(rowBottom, new LinearLayout.LayoutParams(-1, dp(58)));
+        return card;
+    }
+
+    private LinearLayout historyMetric(String label, String value) {
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setGravity(Gravity.CENTER);
+        box.setPadding(dp(4), dp(4), dp(4), dp(4));
+        TextView labelView = text(label, 10, COLOR_MUTED, Typeface.BOLD);
+        labelView.setGravity(Gravity.CENTER);
+        TextView valueView = text(value, 15, COLOR_TEXT, Typeface.BOLD);
+        valueView.setGravity(Gravity.CENTER);
+        box.addView(labelView);
+        box.addView(valueView);
+        return box;
     }
 
     private void toggleRun() {
@@ -824,17 +897,20 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void updateStats(long seconds, float distanceMeters, float speedMps, float accuracyMeters) {
+    private void updateStats(long seconds, float distanceMeters, float speedMps, float maxSpeedMps, float accuracyMeters) {
         latestSeconds = seconds;
         latestDistanceMeters = distanceMeters;
         latestSpeedMps = speedMps;
+        latestMaxSpeedMps = maxSpeedMps;
         latestAccuracyMeters = accuracyMeters;
         float speedKmh = speedMps * 3.6f;
+        float maxSpeedKmh = maxSpeedMps * 3.6f;
         if (speedGaugeView != null) speedGaugeView.setSpeed(speedKmh);
         speedValue.setText(String.format(Locale.US, "%.1f", speedKmh));
         distanceValue.setText(String.format(Locale.US, "%.2f km", distanceMeters / 1000f));
         timeValue.setText(formatTime(seconds));
         averageValue.setText(formatAverageSpeed(seconds, distanceMeters));
+        maxSpeedValue.setText(String.format(Locale.US, "%.1f km/h", maxSpeedKmh));
         accuracyValue.setText(accuracyMeters > 0 ? String.format(Locale.US, "+/- %.0f m", accuracyMeters) : "buscando");
         primaryButton.setText(running ? "DETENER" : "INICIAR");
         stylePrimaryButton(primaryButton, running);
