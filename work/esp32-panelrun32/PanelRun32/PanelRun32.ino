@@ -656,14 +656,29 @@ void registerTouchHit() {
   }
   noteActivity();
   if (currentScreen == 1) {
-    if (running) {
-      switchScreen();
-    } else {
-      sendRunCommand();
-    }
     return;
   }
   switchScreen();
+}
+
+bool isRunButtonArea(uint16_t x, uint16_t y) {
+  return x >= 48 && x <= 272 && y >= 54 && y <= 126;
+}
+
+void handleStartScreenTouch(uint16_t x, uint16_t y) {
+  if (millis() - lastRawSwitchMs < 650) return;
+  lastRawSwitchMs = millis();
+  if (screenSleeping) {
+    wakeScreen();
+    touchWakeOnly = true;
+    return;
+  }
+  noteActivity();
+  if (isRunButtonArea(x, y)) {
+    sendRunCommand();
+  } else {
+    switchScreen();
+  }
 }
 
 void handleTouch() {
@@ -708,7 +723,11 @@ void handleTouch() {
     uint16_t y = touchData.coords[0].y;
     if (!touchDown) {
       bool wasStartScreen = currentScreen == 1;
-      registerTouchHit();
+      if (wasStartScreen) {
+        handleStartScreenTouch(x, y);
+      } else {
+        registerTouchHit();
+      }
       if (touchWakeOnly) {
         touchWakeOnly = false;
         touchDown = true;
