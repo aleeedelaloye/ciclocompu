@@ -33,6 +33,7 @@
 
 const unsigned long SCREEN_SLEEP_MS = 180000UL;
 const unsigned long BATTERY_READ_MS = 3000UL;
+const unsigned long AUTO_VISUAL_DELAY_MS = 5000UL;
 const uint8_t BACKLIGHT_BRIGHTNESS = 255;
 
 Arduino_DataBus *bus = new Arduino_ESP32SPI(45 /* DC */, 21 /* CS */, 38 /* SCK */, 39 /* MOSI */);
@@ -71,6 +72,7 @@ bool connectPromptSent = false;
 bool screenSleeping = false;
 unsigned long lastActivityMs = 0;
 unsigned long lastBatteryReadMs = 0;
+unsigned long movingSinceMs = 0;
 float batteryVoltage = 0.0f;
 int batteryPercent = 0;
 bool touchWakeOnly = false;
@@ -450,9 +452,20 @@ void updateScreenSleep() {
 
 void applyAutoScreen() {
   startCommandSent = false;
-  if (isMoving()) noteActivity();
+  bool moving = isMoving();
+  if (moving) {
+    noteActivity();
+    if (movingSinceMs == 0) movingSinceMs = millis();
+  } else {
+    movingSinceMs = 0;
+  }
   if (screenSleeping) return;
   if (running) {
+    bool movementDelayPassed = movingSinceMs > 0 && millis() - movingSinceMs >= AUTO_VISUAL_DELAY_MS;
+    if (currentScreen == 1 && !movementDelayPassed) {
+      drawStartScreen();
+      return;
+    }
     if (currentScreen != 0) {
       layoutDrawn = false;
       drawLayout();
@@ -643,7 +656,11 @@ void registerTouchHit() {
   }
   noteActivity();
   if (currentScreen == 1) {
-    sendRunCommand();
+    if (running) {
+      switchScreen();
+    } else {
+      sendRunCommand();
+    }
     return;
   }
   switchScreen();
