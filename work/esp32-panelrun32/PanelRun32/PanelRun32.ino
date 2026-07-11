@@ -298,6 +298,17 @@ void drawStatusBar() {
   gfx->fillRoundRect(10, 166, 300, 10, 5, statusColor());
 }
 
+void drawBluetoothIcon(int cx, int cy, uint16_t color) {
+  gfx->drawLine(cx, cy - 36, cx, cy + 36, color);
+  gfx->drawLine(cx, cy - 36, cx + 24, cy - 14, color);
+  gfx->drawLine(cx + 24, cy - 14, cx, cy + 8, color);
+  gfx->drawLine(cx, cy + 8, cx + 24, cy + 30, color);
+  gfx->drawLine(cx + 24, cy + 30, cx, cy + 36, color);
+  gfx->drawLine(cx, cy, cx - 28, cy - 28, color);
+  gfx->drawLine(cx, cy, cx - 28, cy + 28, color);
+  gfx->drawCircle(cx, cy, 45, color);
+}
+
 void drawLayout() {
   currentScreen = 0;
   gfx->fillScreen(COLOR_BG);
@@ -333,14 +344,19 @@ void drawStartScreen() {
 
   bool canSend = connected;
   bool stopMode = running;
-  uint16_t buttonColor = canSend ? (stopMode ? COLOR_RED : COLOR_TEAL) : COLOR_BLUE;
-  gfx->fillRoundRect(48, 54, 224, 72, 24, buttonColor);
-  gfx->setTextColor(COLOR_PANEL);
   if (!canSend) {
+    drawBluetoothIcon(80, 88, COLOR_BLUE);
+    gfx->setTextColor(COLOR_DARK);
     gfx->setTextSize(1);
-    gfx->setCursor(86, 99);
-    gfx->print("CONECTAR");
+    gfx->setCursor(146, 83);
+    gfx->print("Sin conexion");
+    gfx->setTextColor(COLOR_MUTED);
+    gfx->setCursor(146, 112);
+    gfx->print("Abrir APK");
   } else {
+    uint16_t buttonColor = stopMode ? COLOR_RED : COLOR_TEAL;
+    gfx->fillRoundRect(48, 54, 224, 72, 24, buttonColor);
+    gfx->setTextColor(COLOR_PANEL);
     gfx->setTextSize(2);
     gfx->setCursor(stopMode ? 84 : 72, 104);
     gfx->print(stopMode ? "STOP" : "START");
@@ -354,7 +370,7 @@ void drawStartScreen() {
   } else if (startCommandSent) {
     gfx->print("Comando enviado");
   } else {
-    gfx->print(!connected ? "Toca conectar" : (stopMode ? "Toca STOP" : "Toca START"));
+    gfx->print(!connected ? "Esperando APK" : (stopMode ? "Toca STOP" : "Toca START"));
   }
   gfx->setFont();
   drawBleDot();
@@ -683,6 +699,13 @@ void handleStartScreenTouch(uint16_t x, uint16_t y) {
     return;
   }
   noteActivity();
+  if (!connected) {
+    BLEDevice::startAdvertising();
+    connectPromptSent = true;
+    startCommandSent = false;
+    if (!screenSleeping) drawStartScreen();
+    return;
+  }
   if (isRunButtonArea(x, y)) {
     sendRunCommand();
   } else {
