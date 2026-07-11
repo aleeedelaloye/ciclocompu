@@ -4,6 +4,8 @@
 #include <BLEUtils.h>
 #include <BLE2902.h>
 #include <Arduino_GFX_Library.h>
+#include "FreeSansBold12pt7b.h"
+#include "FreeSansBold24pt7b.h"
 #include <Wire.h>
 #include "esp_lcd_touch_axs5106l.h"
 
@@ -359,11 +361,14 @@ void drawWidgets() {
   if (currentScreen != 0) return;
   if (!layoutDrawn) drawLayout();
 
-  gfx->fillRect(22, 22, 252, 46, COLOR_PANEL);
+  gfx->setFont();
+  gfx->fillRect(20, 18, 252, 54, COLOR_PANEL);
   gfx->setTextColor(COLOR_DARK);
-  gfx->setTextSize(5);
-  gfx->setCursor(22, 25);
+  gfx->setTextSize(1);
+  gfx->setFont(&FreeSansBold24pt7b);
+  gfx->setCursor(22, 61);
   gfx->print(kmh, 1);
+  gfx->setFont();
   gfx->setTextColor(COLOR_DARK);
   gfx->setTextSize(3);
   gfx->setCursor(202, 36);
@@ -375,22 +380,25 @@ void drawWidgets() {
   gfx->setCursor(24, 75);
   gfx->print("DISTANCIA");
   gfx->setTextColor(COLOR_DARK);
-  gfx->setTextSize(2);
-  gfx->setCursor(100, 72);
+  gfx->setTextSize(1);
+  gfx->setFont(&FreeSansBold12pt7b);
+  gfx->setCursor(100, 91);
   gfx->print(km, 2);
+  gfx->setFont();
   gfx->setTextSize(1);
   gfx->setCursor(168, 78);
   gfx->print("km");
 
-  gfx->fillRect(28, 132, 118, 22, COLOR_PANEL);
-  gfx->fillRect(184, 132, 108, 22, COLOR_PANEL);
+  gfx->fillRect(28, 128, 124, 28, COLOR_PANEL);
+  gfx->fillRect(184, 128, 112, 28, COLOR_PANEL);
   gfx->setTextColor(COLOR_DARK);
-  gfx->setTextSize(2);
-  gfx->setCursor(28, 135);
+  gfx->setTextSize(1);
+  gfx->setFont(&FreeSansBold12pt7b);
+  gfx->setCursor(28, 153);
   gfx->print(formatTime(secondsElapsed));
-  gfx->setTextSize(2);
-  gfx->setCursor(184, 135);
+  gfx->setCursor(184, 153);
   gfx->print(averageSpeed);
+  gfx->setFont();
 
   drawBleDot();
   drawBatteryStatus();
