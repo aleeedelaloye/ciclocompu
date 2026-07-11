@@ -306,12 +306,14 @@ void drawLayout() {
   gfx->fillRoundRect(10, 108, 146, 52, 14, COLOR_PANEL);
   gfx->fillRoundRect(164, 108, 146, 52, 14, COLOR_PANEL);
 
+  gfx->setFont(&FreeSansBold12pt7b);
   gfx->setTextColor(COLOR_MUTED);
   gfx->setTextSize(1);
-  gfx->setCursor(28, 116);
-  gfx->print("TIEMPO");
-  gfx->setCursor(184, 116);
+  gfx->setCursor(28, 128);
+  gfx->print("Tiempo");
+  gfx->setCursor(184, 128);
   gfx->print("PROM");
+  gfx->setFont();
 
   layoutDrawn = true;
   drawBleDot();
@@ -323,9 +325,10 @@ void drawStartScreen() {
   gfx->fillScreen(COLOR_BG);
 
   gfx->fillRoundRect(10, 8, 300, 154, 18, COLOR_PANEL);
+  gfx->setFont(&FreeSansBold12pt7b);
   gfx->setTextColor(COLOR_MUTED);
   gfx->setTextSize(1);
-  gfx->setCursor(24, 22);
+  gfx->setCursor(24, 35);
   gfx->print(connected ? "APK conectado" : "Bluetooth sin conexion");
 
   bool canSend = connected;
@@ -334,25 +337,26 @@ void drawStartScreen() {
   gfx->fillRoundRect(48, 54, 224, 72, 24, buttonColor);
   gfx->setTextColor(COLOR_PANEL);
   if (!canSend) {
-    gfx->setTextSize(3);
-    gfx->setCursor(68, 78);
+    gfx->setTextSize(1);
+    gfx->setCursor(86, 99);
     gfx->print("CONECTAR");
   } else {
-    gfx->setTextSize(4);
-    gfx->setCursor(stopMode ? 94 : 86, 76);
+    gfx->setTextSize(2);
+    gfx->setCursor(stopMode ? 84 : 72, 104);
     gfx->print(stopMode ? "STOP" : "START");
   }
 
   gfx->setTextColor(COLOR_MUTED);
   gfx->setTextSize(1);
-  gfx->setCursor(54, 142);
+  gfx->setCursor(28, 149);
   if (!connected && connectPromptSent) {
-    gfx->print("Buscando desde el APK...");
+    gfx->print("Buscando APK");
   } else if (startCommandSent) {
-    gfx->print("Comando enviado al celular");
+    gfx->print("Comando enviado");
   } else {
-    gfx->print(!connected ? "Toca y abre conectar ESP32" : (stopMode ? "Toca para detener en el APK" : "Toca para iniciar en el APK"));
+    gfx->print(!connected ? "Toca conectar" : (stopMode ? "Toca STOP" : "Toca START"));
   }
+  gfx->setFont();
   drawBleDot();
   drawStatusBar();
 }
@@ -361,39 +365,36 @@ void drawWidgets() {
   if (currentScreen != 0) return;
   if (!layoutDrawn) drawLayout();
 
-  gfx->setFont();
   gfx->fillRect(20, 18, 252, 54, COLOR_PANEL);
   gfx->setTextColor(COLOR_DARK);
   gfx->setTextSize(1);
   gfx->setFont(&FreeSansBold24pt7b);
   gfx->setCursor(22, 61);
   gfx->print(kmh, 1);
-  gfx->setFont();
+  gfx->setFont(&FreeSansBold12pt7b);
   gfx->setTextColor(COLOR_DARK);
-  gfx->setTextSize(3);
-  gfx->setCursor(202, 36);
+  gfx->setTextSize(1);
+  gfx->setCursor(202, 58);
   gfx->print("km/h");
 
   gfx->fillRect(24, 70, 190, 22, COLOR_PANEL);
+  gfx->setFont(&FreeSansBold12pt7b);
   gfx->setTextColor(COLOR_MUTED);
   gfx->setTextSize(1);
-  gfx->setCursor(24, 75);
-  gfx->print("DISTANCIA");
+  gfx->setCursor(24, 91);
+  gfx->print("Dist");
   gfx->setTextColor(COLOR_DARK);
   gfx->setTextSize(1);
-  gfx->setFont(&FreeSansBold12pt7b);
   gfx->setCursor(100, 91);
   gfx->print(km, 2);
-  gfx->setFont();
   gfx->setTextSize(1);
-  gfx->setCursor(168, 78);
+  gfx->setCursor(168, 91);
   gfx->print("km");
 
   gfx->fillRect(28, 128, 124, 28, COLOR_PANEL);
   gfx->fillRect(184, 128, 112, 28, COLOR_PANEL);
   gfx->setTextColor(COLOR_DARK);
   gfx->setTextSize(1);
-  gfx->setFont(&FreeSansBold12pt7b);
   gfx->setCursor(28, 153);
   gfx->print(formatTime(secondsElapsed));
   gfx->setCursor(184, 153);
