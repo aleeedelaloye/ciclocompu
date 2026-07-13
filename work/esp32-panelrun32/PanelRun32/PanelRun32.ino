@@ -22,10 +22,10 @@
 #define Touch_INT 48
 #define BAT_ADC_PIN 12
 
-#define COLOR_BG 0xEF7D
-#define COLOR_PANEL 0xFFFF
-#define COLOR_DARK 0x1183
-#define COLOR_MUTED 0x632C
+#define COLOR_BG 0x0000
+#define COLOR_PANEL 0xFFE0
+#define COLOR_DARK 0x0000
+#define COLOR_MUTED 0x4208
 #define COLOR_ACCENT 0xBFE8
 #define COLOR_TEAL 0x07E0
 #define COLOR_BLUE 0x04DF
@@ -356,7 +356,7 @@ void drawStartScreen() {
   } else {
     uint16_t buttonColor = stopMode ? COLOR_RED : COLOR_TEAL;
     gfx->fillRoundRect(48, 54, 224, 72, 24, buttonColor);
-    gfx->setTextColor(COLOR_PANEL);
+    gfx->setTextColor(COLOR_DARK);
     gfx->setTextSize(2);
     gfx->setCursor(stopMode ? 84 : 72, 104);
     gfx->print(stopMode ? "STOP" : "START");
