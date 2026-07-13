@@ -23,9 +23,9 @@
 #define BAT_ADC_PIN 12
 
 #define COLOR_BG 0x0000
-#define COLOR_PANEL 0xFFE0
-#define COLOR_DARK 0x0000
-#define COLOR_MUTED 0x4208
+#define COLOR_PANEL 0x0000
+#define COLOR_DARK 0xFFE0
+#define COLOR_MUTED 0xFFE0
 #define COLOR_ACCENT 0xBFE8
 #define COLOR_TEAL 0x07E0
 #define COLOR_BLUE 0x04DF
@@ -270,7 +270,7 @@ void drawBatteryStatus(bool refresh = true) {
   int fillHeight = map(batteryPercent, 0, 100, 0, 88);
 
   gfx->fillRoundRect(302, 10, 10, 92, 5, COLOR_BG);
-  gfx->drawRoundRect(302, 10, 10, 92, 5, COLOR_DARK);
+  gfx->drawRoundRect(302, 10, 10, 92, 5, COLOR_YELLOW);
   gfx->fillRoundRect(304, 12 + (88 - fillHeight), 6, fillHeight, 3, fillColor);
 }
 
@@ -354,9 +354,10 @@ void drawStartScreen() {
     gfx->setCursor(146, 112);
     gfx->print("Abrir APK");
   } else {
-    uint16_t buttonColor = stopMode ? COLOR_RED : COLOR_TEAL;
+    uint16_t buttonColor = COLOR_BG;
     gfx->fillRoundRect(48, 54, 224, 72, 24, buttonColor);
-    gfx->setTextColor(COLOR_DARK);
+    gfx->drawRoundRect(48, 54, 224, 72, 24, stopMode ? COLOR_RED : COLOR_YELLOW);
+    gfx->setTextColor(stopMode ? COLOR_RED : COLOR_YELLOW);
     gfx->setTextSize(2);
     gfx->setCursor(stopMode ? 84 : 72, 104);
     gfx->print(stopMode ? "STOP" : "START");
